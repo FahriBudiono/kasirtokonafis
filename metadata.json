@@ -1,0 +1,6 @@
+{
+  "name": "POS Kasir & Stok Toko Kelontong",
+  "description": "Sistem Kasir (POS) dan Manajemen Stok Barang Toko Sembako & Kelontong Cepat, Lengkap, dan Praktis.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manajemen Stok Barang - Toko Sembako Makmur</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- HEADER -->
+  <header class="bg-slate-900 text-white shadow-md sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center font-bold text-xl shadow">
+          📦
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight text-white leading-tight">MANAJEMEN STOK BARANG</h1>
+          <p class="text-xs text-slate-400">Database Produk & Inventori Toko Kelontong</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <a href="/" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs shadow transition flex items-center gap-1.5">
+          🛒 Kembali ke Kasir (POS)
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="max-w-7xl w-full mx-auto px-4 py-6 flex-1 flex flex-col gap-6">
+
+    <!-- STATS CARDS -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+        <div>
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Jenis Produk</span>
+          <div id="stat-total-products" class="text-2xl font-extrabold text-slate-900 font-mono mt-0.5">0</div>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl font-bold">
+          📦
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+        <div>
+          <span class="text-xs font-semibold text-rose-600 uppercase tracking-wider">Stok Menipis (≤ 5)</span>
+          <div id="stat-low-stock" class="text-2xl font-extrabold text-rose-600 font-mono mt-0.5">0</div>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-2xl font-bold">
+          ⚠️
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+        <div>
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Estimasi Nilai Total Stok</span>
+          <div id="stat-inventory-val" class="text-2xl font-extrabold text-emerald-700 font-mono mt-0.5">Rp 0</div>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl font-bold">
+          💰
+        </div>
+      </div>
+    </div>
+
+    <!-- FORM INPUT BARANG BARU -->
+    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+      <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+        <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+          ✨ Input Barang Baru
+        </h2>
+        <span class="text-xs text-slate-400">Pastikan data harga modal & jual sudah benar</span>
+      </div>
+
+      <form id="form-product" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Barcode -->
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="text-xs font-semibold text-slate-700">Barcode</label>
+            <button type="button" id="btn-gen-barcode" class="text-[11px] text-emerald-600 hover:text-emerald-700 underline font-medium">Acak</button>
+          </div>
+          <input 
+            type="text" 
+            id="input-barcode" 
+            placeholder="Scan atau klik acak" 
+            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono focus:bg-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+          />
+        </div>
+
+        <!-- SKU -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">SKU / Kode Barang</label>
+          <input 
+            type="text" 
+            id="input-sku" 
+            placeholder="Contoh: BRS-02" 
+            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono uppercase focus:bg-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+          />
+        </div>
+
+        <!-- Nama Barang -->
+        <div class="sm:col-span-2">
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Barang Sembako <span class="text-rose-500">*</span></label>
+          <input 
+            type="text" 
+            id="input-name" 
+            required 
+            placeholder="Contoh: Beras Pandan Wangi 5kg" 
+            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-medium focus:bg-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+          />
+        </div>
+
+        <!-- Harga Modal -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Harga Modal / Beli (Rp)</label>
+          <input 
+            type="number" 
+            id="input-cost-price" 
+            min="0" 
+            step="100" 
+            placeholder="0" 
+            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold focus:bg-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+          />
+        </div>
+
+        <!-- Harga Jual -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Harga Jual (Rp) <span class="text-rose-500">*</span></label>
+          <input 
+            type="number" 
+            id="input-selling-price" 
+            required 
+            min="0" 
+            step="100" 
+            placeholder="0" 
+            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-emerald-700 focus:bg-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+          />
+        </div>
+
+        <!-- Stok Awal -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Stok Awal</label>
+          <input 
+            type="number" 
+            id="input-stock" 
+            min="0" 
+            step="any" 
+            value="10" 
+            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold focus:bg-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+          />
+        </div>
+
+        <!-- Satuan -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Satuan Barang</label>
+          <select 
+            id="input-unit" 
+            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-medium focus:bg-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+          >
+            <option value="pcs">pcs</option>
+            <option value="kg">kg (Kilogram)</option>
+            <option value="liter">liter</option>
+            <option value="bungkus">bungkus</option>
+            <option value="sak">sak (Karung)</option>
+            <option value="botol">botol</option>
+            <option value="renceng">renceng</option>
+            <option value="kotak">kotak</option>
+            <option value="dus">dus</option>
+            <option value="ikat">ikat</option>
+          </select>
+        </div>
+
+        <div class="sm:col-span-2 lg:col-span-4 flex justify-end gap-2 mt-2">
+          <button 
+            type="reset" 
+            class="px-4 py-2 border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold transition"
+          >
+            Reset Form
+          </button>
+          <button 
+            type="submit" 
+            id="btn-save-product" 
+            class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow transition flex items-center gap-1.5"
+          >
+            💾 Simpan Barang
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- TABEL DAFTAR SEMUA STOK BARANG -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col flex-1">
+      
+      <!-- Filter Bar -->
+      <div class="p-4 border-b border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center space-x-2 flex-1 min-w-[260px] max-w-md">
+          <div class="relative w-full">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-xs">🔍</span>
+            <input 
+              type="text" 
+              id="filter-search" 
+              placeholder="Cari barcode / nama / sku..." 
+              class="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+            />
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-3 text-xs">
+          <label class="flex items-center space-x-1.5 cursor-pointer text-slate-700 font-medium">
+            <input type="checkbox" id="filter-low-stock" class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+            <span>Hanya Stok Menipis (≤ 5)</span>
+          </label>
+
+          <button id="btn-refresh" class="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 rounded-lg font-medium transition flex items-center gap-1">
+            🔄 Segarkan
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabel -->
+      <div class="overflow-x-auto flex-1">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-100 text-slate-600 uppercase font-semibold border-b border-slate-200">
+            <tr>
+              <th class="py-3 px-3">Barcode / SKU</th>
+              <th class="py-3 px-3">Nama Barang</th>
+              <th class="py-3 px-3 text-right">Harga Modal</th>
+              <th class="py-3 px-3 text-right">Harga Jual</th>
+              <th class="py-3 px-3 text-right">Margin / Laba</th>
+              <th class="py-3 px-3 text-center">Sisa Stok</th>
+              <th class="py-3 px-3 text-center">Status</th>
+              <th class="py-3 px-3 text-center">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="products-table-body" class="divide-y divide-slate-100">
+            <!-- Data produk dimuat via JS -->
+          </tbody>
+        </table>
+        <div id="table-loading" class="text-center py-12 text-slate-400">Memuat data produk...</div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL EDIT BARANG -->
+  <div id="modal-edit" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-5 flex flex-col">
+      <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+        <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+          ✏️ Edit Data Barang
+        </h3>
+        <button id="btn-close-edit" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+      </div>
+
+      <form id="form-edit" class="py-4 space-y-3">
+        <input type="hidden" id="edit-id">
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Barcode</label>
+            <input type="text" id="edit-barcode" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">SKU</label>
+            <input type="text" id="edit-sku" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono uppercase">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Barang <span class="text-rose-500">*</span></label>
+          <input type="text" id="edit-name" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-medium">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Harga Modal (Rp)</label>
+            <input type="number" id="edit-cost-price" min="0" step="100" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Harga Jual (Rp) <span class="text-rose-500">*</span></label>
+            <input type="number" id="edit-selling-price" required min="0" step="100" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-emerald-700">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Sisa Stok</label>
+            <input type="number" id="edit-stock" min="0" step="any" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Satuan</label>
+            <select id="edit-unit" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-medium">
+              <option value="pcs">pcs</option>
+              <option value="kg">kg (Kilogram)</option>
+              <option value="liter">liter</option>
+              <option value="bungkus">bungkus</option>
+              <option value="sak">sak (Karung)</option>
+              <option value="botol">botol</option>
+              <option value="renceng">renceng</option>
+              <option value="kotak">kotak</option>
+              <option value="dus">dus</option>
+              <option value="ikat">ikat</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex justify-end gap-2">
+          <button type="button" id="btn-cancel-edit" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-lg text-xs font-semibold">Batal</button>
+          <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow">Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL QUICK RESTOCK (KULAKAN CEPAT) -->
+  <div id="modal-restock" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5 flex flex-col">
+      <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+        <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+          📥 Tambah Stok Masuk (Kulakan)
+        </h3>
+        <button id="btn-close-restock" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+      </div>
+
+      <div class="py-3">
+        <p class="text-xs text-slate-600 mb-1">Barang: <strong id="restock-item-name" class="text-slate-900">-</strong></p>
+        <p class="text-xs text-slate-500 mb-3">Stok Saat Ini: <span id="restock-current-stock" class="font-bold text-emerald-700">0</span></p>
+
+        <label class="block text-xs font-semibold text-slate-700 mb-1">Jumlah Tambahan Stok Masuk</label>
+        <input 
+          type="number" 
+          id="restock-qty" 
+          min="1" 
+          step="any" 
+          value="10" 
+          class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
+        />
+
+        <div class="grid grid-cols-4 gap-1.5 mt-2">
+          <button type="button" class="btn-preset-restock py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs font-bold" data-val="5">+5</button>
+          <button type="button" class="btn-preset-restock py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs font-bold" data-val="10">+10</button>
+          <button type="button" class="btn-preset-restock py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs font-bold" data-val="25">+25</button>
+          <button type="button" class="btn-preset-restock py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs font-bold" data-val="50">+50</button>
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-slate-100 flex justify-end gap-2">
+        <button type="button" id="btn-cancel-restock" class="px-3 py-2 border border-slate-300 text-slate-600 rounded-lg text-xs font-semibold">Batal</button>
+        <button type="button" id="btn-save-restock" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow">
+          + Tambahkan ke Stok
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT MANAJEMEN BARANG -->
+  <script>
+    let productsList = [];
+    let currentRestockItem = null;
+
+    function formatRupiah(amount) {
+      return 'Rp ' + Math.round(Number(amount) || 0).toLocaleString('id-ID');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchProducts();
+      fetchSummary();
+      setupEvents();
+    });
+
+    function setupEvents() {
+      // Auto barcode generator
+      document.getElementById('btn-gen-barcode').addEventListener('click', () => {
+        const randomCode = '899' + Math.floor(1000000 + Math.random() * 9000000);
+        document.getElementById('input-barcode').value = randomCode;
+      });
+
+      // Form tambah barang
+      document.getElementById('form-product').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+          barcode: document.getElementById('input-barcode').value.trim() || null,
+          sku: document.getElementById('input-sku').value.trim() || null,
+          name: document.getElementById('input-name').value.trim(),
+          cost_price: parseFloat(document.getElementById('input-cost-price').value) || 0,
+          selling_price: parseFloat(document.getElementById('input-selling-price').value) || 0,
+          stock: parseFloat(document.getElementById('input-stock').value) || 0,
+          unit: document.getElementById('input-unit').value
+        };
+
+        try {
+          const res = await fetch('/api/products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const result = await res.json();
+          if (!result.success) {
+            alert('Gagal: ' + result.message);
+            return;
+          }
+          alert(`Barang "${payload.name}" berhasil ditambahkan!`);
+          document.getElementById('form-product').reset();
+          fetchProducts();
+          fetchSummary();
+        } catch (err) {
+          alert('Error saat menambah barang: ' + err.message);
+        }
+      });
+
+      // Filter search
+      let searchTimeout = null;
+      document.getElementById('filter-search').addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          fetchProducts();
+        }, 200);
+      });
+
+      // Filter low stock
+      document.getElementById('filter-low-stock').addEventListener('change', () => {
+        fetchProducts();
+      });
+
+      // Refresh
+      document.getElementById('btn-refresh').addEventListener('click', () => {
+        fetchProducts();
+        fetchSummary();
+      });
+
+      // Form Edit
+      document.getElementById('form-edit').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-id').value;
+        const payload = {
+          barcode: document.getElementById('edit-barcode').value.trim() || null,
+          sku: document.getElementById('edit-sku').value.trim() || null,
+          name: document.getElementById('edit-name').value.trim(),
+          cost_price: parseFloat(document.getElementById('edit-cost-price').value) || 0,
+          selling_price: parseFloat(document.getElementById('edit-selling-price').value) || 0,
+          stock: parseFloat(document.getElementById('edit-stock').value) || 0,
+          unit: document.getElementById('edit-unit').value
+        };
+
+        try {
+          const res = await fetch(`/api/products/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const result = await res.json();
+          if (!result.success) {
+            alert('Gagal edit: ' + result.message);
+            return;
+          }
+          document.getElementById('modal-edit').classList.add('hidden');
+          fetchProducts();
+          fetchSummary();
+        } catch (err) {
+          alert('Error edit barang: ' + err.message);
+        }
+      });
+
+      document.getElementById('btn-close-edit').addEventListener('click', () => {
+        document.getElementById('modal-edit').classList.add('hidden');
+      });
+      document.getElementById('btn-cancel-edit').addEventListener('click', () => {
+        document.getElementById('modal-edit').classList.add('hidden');
+      });
+
+      // Restock Preset Buttons
+      document.querySelectorAll('.btn-preset-restock').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.getElementById('restock-qty').value = btn.dataset.val;
+        });
+      });
+
+      // Simpan Restock
+      document.getElementById('btn-save-restock').addEventListener('click', async () => {
+        if (!currentRestockItem) return;
+        const addQty = parseFloat(document.getElementById('restock-qty').value) || 0;
+        if (addQty <= 0) {
+          alert('Jumlah tambahan stok harus lebih dari 0');
+          return;
+        }
+
+        try {
+          const res = await fetch(`/api/products/${currentRestockItem.id}/stock`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adjustment: addQty })
+          });
+          const result = await res.json();
+          if (!result.success) {
+            alert('Gagal update stok: ' + result.message);
+            return;
+          }
+          document.getElementById('modal-restock').classList.add('hidden');
+          fetchProducts();
+          fetchSummary();
+        } catch (err) {
+          alert('Error restock: ' + err.message);
+        }
+      });
+
+      document.getElementById('btn-close-restock').addEventListener('click', () => {
+        document.getElementById('modal-restock').classList.add('hidden');
+      });
+      document.getElementById('btn-cancel-restock').addEventListener('click', () => {
+        document.getElementById('modal-restock').classList.add('hidden');
+      });
+    }
+
+    async function fetchProducts() {
+      const q = document.getElementById('filter-search').value.trim();
+      const lowStock = document.getElementById('filter-low-stock').checked;
+      const loading = document.getElementById('table-loading');
+      const tbody = document.getElementById('products-table-body');
+
+      loading.classList.remove('hidden');
+      tbody.innerHTML = '';
+
+      try {
+        const url = `/api/products?q=${encodeURIComponent(q)}&low_stock=${lowStock}`;
+        const res = await fetch(url);
+        const result = await res.json();
+        loading.classList.add('hidden');
+
+        if (!result.success || !result.data || result.data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-slate-400">Tidak ada barang yang cocok dengan pencarian</td></tr>`;
+          return;
+        }
+
+        productsList = result.data;
+        renderProductsTable(result.data);
+      } catch (err) {
+        loading.textContent = 'Gagal memuat barang: ' + err.message;
+      }
+    }
+
+    function renderProductsTable(items) {
+      const tbody = document.getElementById('products-table-body');
+      tbody.innerHTML = '';
+
+      items.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
+
+        const margin = p.selling_price - p.cost_price;
+        const marginPct = p.cost_price > 0 ? Math.round((margin / p.cost_price) * 100) : 0;
+
+        let statusBadge = '';
+        if (p.stock <= 0) {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 font-bold text-[10px]">Habis</span>';
+        } else if (p.stock <= 5) {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-bold text-[10px]">Menipis</span>';
+        } else {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-bold text-[10px]">Aman</span>';
+        }
+
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 font-mono text-slate-500">
+            <div>${p.barcode || '-'}</div>
+            <div class="text-[10px] text-slate-400">${p.sku || '-'}</div>
+          </td>
+          <td class="py-2.5 px-3 font-bold text-slate-800">
+            ${p.name}
+          </td>
+          <td class="py-2.5 px-3 text-right text-slate-500 font-mono">
+            ${formatRupiah(p.cost_price)}
+          </td>
+          <td class="py-2.5 px-3 text-right font-bold text-slate-900 font-mono">
+            ${formatRupiah(p.selling_price)}
+          </td>
+          <td class="py-2.5 px-3 text-right font-semibold text-emerald-700 font-mono">
+            +${formatRupiah(margin)}
+            <span class="text-[10px] text-slate-400 block font-normal">(${marginPct}%)</span>
+          </td>
+          <td class="py-2.5 px-3 text-center font-bold ${p.stock <= 5 ? 'text-rose-600' : 'text-slate-800'}">
+            ${p.stock} <span class="text-[10px] text-slate-400 font-normal">${p.unit}</span>
+          </td>
+          <td class="py-2.5 px-3 text-center">
+            ${statusBadge}
+          </td>
+          <td class="py-2.5 px-3 text-center">
+            <div class="flex items-center justify-center space-x-1">
+              <button class="btn-action-restock px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded text-[11px] font-bold transition" data-id="${p.id}" title="Tambah Stok Masuk">
+                + Kulakan
+              </button>
+              <button class="btn-action-edit p-1.5 text-slate-400 hover:text-blue-600 transition" data-id="${p.id}" title="Edit Data">
+                ✏️
+              </button>
+              <button class="btn-action-delete p-1.5 text-slate-400 hover:text-rose-600 transition" data-id="${p.id}" title="Hapus Barang">
+                🗑️
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Actions bindings
+      tbody.querySelectorAll('.btn-action-restock').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = Number(btn.dataset.id);
+          const item = productsList.find(p => p.id === id);
+          if (!item) return;
+          currentRestockItem = item;
+          document.getElementById('restock-item-name').textContent = item.name;
+          document.getElementById('restock-current-stock').textContent = `${item.stock} ${item.unit}`;
+          document.getElementById('restock-qty').value = '10';
+          document.getElementById('modal-restock').classList.remove('hidden');
+        });
+      });
+
+      tbody.querySelectorAll('.btn-action-edit').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = Number(btn.dataset.id);
+          const item = productsList.find(p => p.id === id);
+          if (!item) return;
+
+          document.getElementById('edit-id').value = item.id;
+          document.getElementById('edit-barcode').value = item.barcode || '';
+          document.getElementById('edit-sku').value = item.sku || '';
+          document.getElementById('edit-name').value = item.name;
+          document.getElementById('edit-cost_price' || 'edit-cost-price').value = item.cost_price;
+          document.getElementById('edit-selling-price').value = item.selling_price;
+          document.getElementById('edit-stock').value = item.stock;
+          document.getElementById('edit-unit').value = item.unit || 'pcs';
+
+          document.getElementById('modal-edit').classList.remove('hidden');
+        });
+      });
+
+      tbody.querySelectorAll('.btn-action-delete').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = Number(btn.dataset.id);
+          const item = productsList.find(p => p.id === id);
+          if (!item) return;
+
+          if (confirm(`Yakin ingin menghapus barang "${item.name}"? Data penjualan sebelumnya tetap aman.`)) {
+            try {
+              const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+              const result = await res.json();
+              if (result.success) {
+                fetchProducts();
+                fetchSummary();
+              } else {
+                alert('Gagal menghapus: ' + result.message);
+              }
+            } catch (e) {
+              alert('Error saat menghapus: ' + e.message);
+            }
+          }
+        });
+      });
+    }
+
+    async function fetchSummary() {
+      try {
+        const res = await fetch('/api/summary');
+        const result = await res.json();
+        if (result.success && result.data) {
+          document.getElementById('stat-total-products').textContent = result.data.totalProducts;
+          document.getElementById('stat-low-stock').textContent = result.data.lowStockCount;
+          document.getElementById('stat-inventory-val').textContent = formatRupiah(result.data.inventoryValue);
+        }
+      } catch (e) {
+        console.error('Error fetch summary:', e);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kasir POS - Toko Kelontong & Sembako</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #print-area, #print-area * {
+        visibility: visible;
+      }
+      #print-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- HEADER POS -->
+  <header class="bg-slate-900 text-white shadow-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center font-bold text-xl shadow">
+          🏪
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight text-white leading-tight">TOKO SEMBAKO MAKMUR</h1>
+          <p class="text-xs text-slate-400">Sistem Kasir Cepat & Manajemen Stok Offline</p>
+        </div>
+      </div>
+
+      <!-- Quick Nav & Jam -->
+      <div class="flex items-center space-x-3 text-sm">
+        <div class="hidden md:flex items-center bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300 font-mono text-xs">
+          🕒 <span id="clock" class="ml-1.5 font-semibold text-emerald-400">00:00:00 WIB</span>
+        </div>
+
+        <button id="btn-sales-history" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium border border-slate-700 transition flex items-center gap-1.5">
+          📜 Riwayat [F9]
+        </button>
+
+        <button id="btn-shortcuts" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium border border-slate-700 transition flex items-center gap-1.5">
+          ⌨️ Tombol Pintas [F1]
+        </button>
+
+        <a href="/barang.html" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg text-xs shadow transition flex items-center gap-1.5">
+          📦 Kelola Stok Barang
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CASHIER WORKSPACE -->
+  <main class="max-w-7xl w-full mx-auto px-4 py-4 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-5">
+    
+    <!-- LEFT COLUMN: SCANNER, SEMBAKO CEPAT & KERANJANG BELANJA (7 Kolom) -->
+    <div class="lg:col-span-7 flex flex-col gap-4">
+      
+      <!-- SCANNER / SEARCH INPUT -->
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+        <label for="barcode-input" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+          Scan Barcode / Cari Nama Barang / SKU <span class="text-slate-400 font-normal">(Tekan F8 untuk fokus)</span>
+        </label>
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            🔍
+          </div>
+          <input 
+            type="text" 
+            id="barcode-input" 
+            placeholder="Scan barcode dengan scanner atau ketik 'Beras', 'Minyak', dsb lalu Enter..." 
+            class="w-full pl-10 pr-24 py-2.5 bg-slate-50 border-2 border-emerald-500/40 focus:border-emerald-600 focus:bg-white rounded-lg text-slate-900 font-medium placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 transition text-sm"
+            autocomplete="off"
+            autofocus
+          />
+          <button 
+            id="btn-add-search" 
+            class="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold transition"
+          >
+            + Tambah
+          </button>
+        </div>
+
+        <!-- Live Dropdown Pencarian -->
+        <div id="search-dropdown" class="hidden mt-2 max-h-60 overflow-y-auto divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white shadow-xl z-20">
+          <!-- Item hasil pencarian akan dimasukkan via JavaScript -->
+        </div>
+      </div>
+
+      <!-- ITEM SEMBAKO POPULER (QUICK TOUCH BUTTONS) -->
+      <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-200">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1">
+            ⚡ Item Cepat Sembako
+          </span>
+          <span class="text-[11px] text-slate-400">Klik untuk langsung tambah ke keranjang</span>
+        </div>
+        <div id="quick-products" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+          <!-- Dimuat dari JavaScript -->
+        </div>
+      </div>
+
+      <!-- DAFTAR KERANJANG BELANJA -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col overflow-hidden min-h-[380px]">
+        <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+          <div class="flex items-center space-x-2">
+            <span class="font-bold text-slate-800 text-sm">🛒 Keranjang Belanja</span>
+            <span id="cart-item-count" class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-bold">0 item</span>
+          </div>
+          <button id="btn-clear-cart" class="text-xs text-rose-600 hover:text-rose-700 font-medium hover:underline flex items-center gap-1">
+            🗑️ Kosongkan [F4]
+          </button>
+        </div>
+
+        <!-- Tabel Barang -->
+        <div class="flex-1 overflow-x-auto overflow-y-auto max-h-[420px]">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-100/80 text-slate-600 text-xs uppercase font-semibold sticky top-0 border-b border-slate-200">
+              <tr>
+                <th class="py-2.5 px-3 w-12 text-center">No</th>
+                <th class="py-2.5 px-3">Nama Barang</th>
+                <th class="py-2.5 px-3 text-right">Harga</th>
+                <th class="py-2.5 px-3 text-center w-36">Jumlah</th>
+                <th class="py-2.5 px-3 text-right">Subtotal</th>
+                <th class="py-2.5 px-2 text-center w-12">Hapus</th>
+              </tr>
+            </thead>
+            <tbody id="cart-table-body" class="divide-y divide-slate-100">
+              <!-- Baris keranjang belanja akan dirender di sini -->
+            </tbody>
+          </table>
+
+          <!-- Empty State -->
+          <div id="cart-empty" class="py-16 text-center text-slate-400 flex flex-col items-center justify-center">
+            <div class="w-16 h-16 mb-2 rounded-full bg-slate-100 flex items-center justify-center text-2xl">
+              🛒
+            </div>
+            <p class="font-semibold text-slate-600 text-sm">Keranjang Masih Kosong</p>
+            <p class="text-xs text-slate-400 mt-1 max-w-xs">Scan barcode barang dengan barcode scanner atau ketik nama sembako di kolom atas.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: KALKULATOR TOTAL & KEMBALIAN (5 Kolom) -->
+    <div class="lg:col-span-5 flex flex-col gap-4">
+      
+      <!-- DISPLAY TOTAL BELANJA BESAR -->
+      <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-5 rounded-2xl shadow-lg border border-slate-700">
+        <span class="text-xs uppercase tracking-wider font-semibold text-emerald-400">Total Tagihan Belanja</span>
+        <div class="mt-1 flex items-baseline justify-between">
+          <span class="text-xs text-slate-400">IDR</span>
+          <span id="display-grand-total" class="text-4xl font-extrabold tracking-tight text-emerald-300 font-mono">
+            Rp 0
+          </span>
+        </div>
+        <div class="mt-3 pt-3 border-t border-slate-700/60 flex justify-between text-xs text-slate-300">
+          <span>Jumlah Barang: <strong id="summary-total-qty" class="text-white">0</strong></span>
+          <span>Metode: <strong id="summary-payment-mode" class="text-emerald-400">Tunai (Cash)</strong></span>
+        </div>
+      </div>
+
+      <!-- KALKULATOR PEMBAYARAN & KEMBALIAN -->
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-4">
+        
+        <!-- Pilihan Metode Pembayaran -->
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Metode Pembayaran</label>
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" class="btn-pay-method px-3 py-2 rounded-lg border-2 border-emerald-600 bg-emerald-50 text-emerald-800 font-bold text-xs text-center" data-method="cash">
+              💵 Tunai
+            </button>
+            <button type="button" class="btn-pay-method px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-xs text-center" data-method="qris">
+              📱 QRIS
+            </button>
+            <button type="button" class="btn-pay-method px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-xs text-center" data-method="transfer">
+              🏦 Transfer
+            </button>
+          </div>
+        </div>
+
+        <!-- Input Uang Diterima -->
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label for="input-paid-amount" class="text-xs font-bold uppercase tracking-wider text-slate-600">
+              Uang Diterima (Rp) <span class="text-emerald-600 font-normal">(Tekan F2)</span>
+            </label>
+            <button id="btn-exact-cash" class="text-xs font-semibold text-emerald-600 hover:text-emerald-700 underline">
+              Uang Pas
+            </button>
+          </div>
+          <div class="relative">
+            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">Rp</span>
+            <input 
+              type="number" 
+              id="input-paid-amount" 
+              placeholder="0" 
+              min="0"
+              step="500"
+              class="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-slate-300 focus:border-emerald-600 focus:bg-white rounded-xl text-xl font-bold font-mono text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 transition"
+            />
+          </div>
+        </div>
+
+        <!-- Preset Pecahan Uang Cepat (Rupiah) -->
+        <div>
+          <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Pecahan Cepat:</span>
+          <div class="grid grid-cols-4 gap-1.5">
+            <button type="button" class="btn-quick-cash py-1.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 rounded-lg text-xs font-semibold" data-amount="10000">10rb</button>
+            <button type="button" class="btn-quick-cash py-1.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 rounded-lg text-xs font-semibold" data-amount="20000">20rb</button>
+            <button type="button" class="btn-quick-cash py-1.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 rounded-lg text-xs font-semibold" data-amount="50000">50rb</button>
+            <button type="button" class="btn-quick-cash py-1.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 rounded-lg text-xs font-semibold" data-amount="100000">100rb</button>
+          </div>
+        </div>
+
+        <!-- KOTAK KEMBALIAN -->
+        <div id="change-box" class="p-4 rounded-xl border bg-slate-50 border-slate-200 transition-colors">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-500">
+            <span id="change-label">Kembalian</span>
+            <span id="change-status" class="text-[11px] font-medium text-slate-400">Menunggu pembayaran</span>
+          </div>
+          <div id="display-change" class="text-2xl font-extrabold font-mono mt-1 text-slate-700">
+            Rp 0
+          </div>
+        </div>
+
+        <!-- TOMBOL BAYAR SEKARANG -->
+        <button 
+          id="btn-checkout" 
+          disabled
+          class="w-full py-4 px-6 bg-slate-300 text-slate-500 rounded-xl font-bold text-base shadow-sm transition flex items-center justify-center gap-2 cursor-not-allowed uppercase tracking-wide"
+        >
+          <span>PROSES BAYAR [F2]</span>
+          <span>💳</span>
+        </button>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- MODAL STRUK TRANSAKSI (RECEIPT) -->
+  <div id="modal-receipt" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden flex flex-col">
+      <!-- Header Struk -->
+      <div class="p-4 bg-emerald-600 text-white flex justify-between items-center">
+        <h3 class="font-bold text-sm">✅ Transaksi Berhasil</h3>
+        <button id="btn-close-receipt" class="text-white/80 hover:text-white text-lg font-bold">&times;</button>
+      </div>
+
+      <!-- Area Kertas Struk Termal (58mm) -->
+      <div id="print-area" class="p-5 font-mono text-xs text-slate-800 bg-white">
+        <div class="text-center pb-3 border-b border-dashed border-slate-300">
+          <h2 class="font-bold text-sm uppercase">TOKO SEMBAKO MAKMUR</h2>
+          <p class="text-[10px] text-slate-500">Jl. Raya Kelontong No. 128, Pasar Tradisional</p>
+          <p class="text-[10px] text-slate-500">Telp/WA: 0812-3456-7890</p>
+        </div>
+
+        <div class="py-2 text-[10px] space-y-0.5 border-b border-dashed border-slate-300 text-slate-600">
+          <div class="flex justify-between">
+            <span>No Faktur:</span>
+            <strong id="receipt-invoice" class="font-bold text-slate-900">-</strong>
+          </div>
+          <div class="flex justify-between">
+            <span>Tanggal:</span>
+            <span id="receipt-date">-</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Kasir:</span>
+            <span id="receipt-cashier">Kasir 1</span>
+          </div>
+        </div>
+
+        <!-- Daftar Barang -->
+        <div class="py-2.5 border-b border-dashed border-slate-300">
+          <table class="w-full text-[11px]">
+            <tbody id="receipt-items-body" class="divide-y divide-dotted divide-slate-200">
+              <!-- Item Struk -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Ringkasan Pembayaran -->
+        <div class="py-2 space-y-1 text-[11px] border-b border-dashed border-slate-300">
+          <div class="flex justify-between font-bold text-xs">
+            <span>TOTAL:</span>
+            <span id="receipt-total">Rp 0</span>
+          </div>
+          <div class="flex justify-between text-slate-600">
+            <span>BAYAR (<span id="receipt-method">TUNAI</span>):</span>
+            <span id="receipt-paid">Rp 0</span>
+          </div>
+          <div class="flex justify-between font-bold text-slate-900">
+            <span>KEMBALI:</span>
+            <span id="receipt-change">Rp 0</span>
+          </div>
+        </div>
+
+        <!-- Ucapan Terima Kasih -->
+        <div class="pt-3 text-center text-[10px] text-slate-500">
+          <p>Terima Kasih Atas Kunjungan Anda!</p>
+          <p class="text-[9px] mt-0.5">Barang yang sudah dibeli tidak dapat ditukar kecuali perjanjian.</p>
+        </div>
+      </div>
+
+      <!-- Action Buttons Modal -->
+      <div class="p-4 bg-slate-50 border-t border-slate-200 flex gap-2">
+        <button id="btn-print-receipt" class="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-bold text-xs transition flex items-center justify-center gap-1.5">
+          🖨️ Cetak Struk
+        </button>
+        <button id="btn-new-transaction" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-xs transition flex items-center justify-center gap-1.5">
+          ✨ Transaksi Baru (Enter)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL BANTUAN TOMBOL PINTAS (F1) -->
+  <div id="modal-shortcuts" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-5">
+      <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+          ⌨️ Tombol Pintas Keyboard (Hotkeys)
+        </h3>
+        <button id="btn-close-shortcuts" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+      </div>
+      <div class="py-3 space-y-2 text-xs text-slate-600">
+        <div class="flex justify-between py-1 border-b border-slate-50">
+          <span class="font-medium">Scan / Cari Barang</span>
+          <kbd class="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded font-mono font-bold text-slate-800">F8</kbd>
+        </div>
+        <div class="flex justify-between py-1 border-b border-slate-50">
+          <span class="font-medium">Tambah barang dari input pencarian</span>
+          <kbd class="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded font-mono font-bold text-slate-800">Enter</kbd>
+        </div>
+        <div class="flex justify-between py-1 border-b border-slate-50">
+          <span class="font-medium">Fokus Pembayaran / Bayar Cepat</span>
+          <kbd class="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded font-mono font-bold text-slate-800">F2</kbd>
+        </div>
+        <div class="flex justify-between py-1 border-b border-slate-50">
+          <span class="font-medium">Kosongkan Keranjang</span>
+          <kbd class="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded font-mono font-bold text-slate-800">F4</kbd>
+        </div>
+        <div class="flex justify-between py-1 border-b border-slate-50">
+          <span class="font-medium">Buka Riwayat Penjualan</span>
+          <kbd class="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded font-mono font-bold text-slate-800">F9</kbd>
+        </div>
+        <div class="flex justify-between py-1 border-b border-slate-50">
+          <span class="font-medium">Tutup Modal / Batal</span>
+          <kbd class="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded font-mono font-bold text-slate-800">Esc</kbd>
+        </div>
+      </div>
+      <button id="btn-ack-shortcuts" class="w-full mt-2 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold">
+        Mengerti
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL RIWAYAT PENJUALAN (F9) -->
+  <div id="modal-history" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full p-5 flex flex-col max-h-[85vh]">
+      <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+          📜 Riwayat Transaksi Terakhir
+        </h3>
+        <button id="btn-close-history" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+      </div>
+      <div class="flex-1 overflow-y-auto py-3">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 text-slate-500 uppercase font-semibold">
+            <tr>
+              <th class="py-2 px-3">Faktur</th>
+              <th class="py-2 px-3">Waktu</th>
+              <th class="py-2 px-3">Metode</th>
+              <th class="py-2 px-3 text-right">Total</th>
+              <th class="py-2 px-3 text-center">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="history-table-body" class="divide-y divide-slate-100">
+            <!-- Riwayat penjualan -->
+          </tbody>
+        </table>
+        <div id="history-loading" class="text-center py-8 text-slate-400">Memuat data...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio sintetis scanner / beep -->
+  <script src="/app.js"></script>
+</body>
+</html>
